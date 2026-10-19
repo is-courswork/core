@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: airlines-core
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/airlines}
+    username: ${DB_USER:airlines}
+    password: ${DB_PASSWORD:airlines}
+  jackson:
+    default-property-inclusion: non_null
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  docker:
+    compose:
+      # При локальном запуске из IDE Spring сам поднимает Postgres из compose.yaml.
+      lifecycle-management: start-only
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api/core
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

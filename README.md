@@ -1,93 +1,102 @@
 # core
 
+Бэкенд системы проверки гипотез для авиакомпаний
 
 
-## Getting started
+**Стек:** Java 21, Spring Boot 4, Spring Data JPA, Flyway, PostgreSQL 17, Maven, Lombok, MapStruct. Контракт API описывается на TypeSpec.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Быстрый старт
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Нужны JDK 21, Node.js 20+ и запущенный Docker.
 
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.dc.lysmux.dev/airlines/core.git
-git branch -M main
-git push -uf origin main
+```bash
+./mvnw spring-boot:run
 ```
 
-## Integrate with your tools
+Spring сам поднимет Postgres из `compose.yaml`, Flyway накатит миграции. API доступно на `http://localhost:8080/api/core`:
 
-* [Set up project integrations](https://gitlab.dc.lysmux.dev/airlines/core/-/settings/integrations)
+```bash
+curl -X POST localhost:8080/api/core/run -H 'Content-Type: application/json' -d '{"name":"Тест"}'
+curl localhost:8080/api/core/run/<id>
+curl localhost:8080/api/core/actuator/health
+```
 
-## Collaborate with your team
+Подключение к другой БД задаётся переменными `DB_URL`, `DB_USER`, `DB_PASSWORD`.
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Контракт API и кодогенерация
 
-## Test and Deploy
+Контракт — источник истины для бэкенда и фронтенда:
 
-Use the built-in continuous integration in GitLab.
+```
+typespec/*.tsp  ──npm run build──▶  src/main/resources/openapi/openapi.yaml  ──./mvnw compile──▶  Java-интерфейсы и модели
+                                                       │
+                                                       └──▶ фронтенд генерирует клиент
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+1. API описывается в `typespec/` (точка входа — `main.tsp`).
+2. `npm run build` в `typespec/` собирает `src/main/resources/openapi/openapi.yaml`. Этот файл **коммитится**: так Maven, Docker и фронтенд обходятся без Node.js, а CI проверяет, что он совпадает с `typespec/`.
+3. При сборке Maven генерирует из `openapi.yaml` в `target/generated-sources/openapi`:
+   - интерфейсы контроллеров — `ru.itmo.airlines.core.api.*Api`;
+   - модели запросов и ответов — `ru.itmo.airlines.core.api.model.*`.
 
-***
+   Этот код не коммитится и руками не правится.
 
-# Editing this README
+Первый раз установите зависимости TypeSpec:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```bash
+cd typespec && npm install
+```
 
-## Suggestions for a good README
+### Как добавить метод API
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+1. Описать модели запроса/ответа и операцию в `typespec/` (новый файл подключить в `main.tsp`).
+2. `cd typespec && npm run build`.
+3. `./mvnw compile` — появится новый метод в интерфейсе `*Api`.
+4. Реализовать его в контроллере, при изменении схемы БД добавить миграцию `src/main/resources/db/migration/V<N>__<описание>.sql`.
 
-## Name
-Choose a self-explaining name for your project.
+### Если IDE подсвечивает код красным
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Чаще всего IDE не видит сгенерированные классы (`RunApi`, `RunResponse` и т.п.) или видит устаревшие. По порядку:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+1. `./mvnw compile` — сгенерировать код заново.
+2. IntelliJ IDEA: Maven → **Reload All Maven Projects**. Папка `target/generated-sources/openapi/src/main/java` должна быть отмечена как Generated Sources Root.
+3. Не помогло — **File → Invalidate Caches… → Invalidate and Restart**.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Если красным подсвечены геттеры, сеттеры, `log` или `*MapperImpl` — IDE не обрабатывает аннотации Lombok и MapStruct: включите **Settings → Build → Compiler → Annotation Processors → Enable annotation processing** (плагин Lombok в IntelliJ встроен).
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Структура кода
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Пакеты в `ru.itmo.airlines.core`:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+| Пакет | Что внутри |
+|---|---|
+| `controller` | REST-контроллеры, реализуют сгенерированные интерфейсы `*Api` |
+| `controller.advice` | Перевод исключений в ответы API (`ErrorResponse`) |
+| `service` | Логика, работает с DTO |
+| `dto` | DTO сервисного слоя |
+| `mapper` | Интерфейсы MapStruct: перевод между моделями API, DTO и сущностями БД (реализацию генерирует MapStruct) |
+| `dao.entity` | JPA-сущности (таблицы БД) |
+| `dao.repository` | Репозитории Spring Data |
+| `model` | Общие перечисления (например, `RunStatus`) |
+| `exception` | Исключения сервиса |
+| `util` | Вспомогательное: `TimeProvider` и т.п. |
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Путь запроса: `CreateRunRequest` → `RunMapper` → `CreateRunDto` → `RunService` → `RunEntity` → БД, ответ обратно до `RunResponse`.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Тесты
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+| Тип | Пакет | Команда | Что нужно |
+|---|---|---|---|
+| Юнит | `unittest` | `./mvnw test` | ничего |
+| Компонентные | `componenttest` | `./mvnw verify` (запустит и юнит) | Docker: весь сервис + Postgres в Testcontainers |
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Docker-образ
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+docker build -t airlines-core .
+docker run -p 8080:8080 -e DB_URL=jdbc:postgresql://host.docker.internal:5432/airlines airlines-core
+```
 
-## License
-For open source projects, say how it is licensed.
+## CI
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+`.gitlab-ci.yml`: проверка, что `openapi.yaml` собран из актуального `typespec/`, затем сборка jar с юнит-тестами.

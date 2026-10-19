@@ -1,0 +1,5 @@
+target/
+typespec/
+.git/
+.idea/
+*.iml

@@ -1,0 +1,30 @@
+stages:
+  - contract
+  - build
+
+# Проверяет, что openapi.yaml пересобран после изменений в typespec/.
+contract:
+  stage: contract
+  image: node:24
+  script:
+    - cd typespec
+    - npm ci
+    - npm run build
+    - git diff --exit-code -- ../src/main/resources/openapi/openapi.yaml
+
+# Сборка и юнит-тесты. Компонентные тесты требуют Docker (Testcontainers),
+# поэтому в CI пока не запускаются.
+build:
+  stage: build
+  image: eclipse-temurin:21-jdk
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  cache:
+    paths:
+      - .m2/repository
+  script:
+    - ./mvnw -B package
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 week

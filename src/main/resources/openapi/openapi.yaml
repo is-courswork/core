@@ -1,0 +1,135 @@
+openapi: 3.0.0
+info:
+  title: Airlines Core API
+  version: 0.1.0
+tags:
+  - name: Run
+paths:
+  /run:
+    post:
+      operationId: createRun
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRunRequest'
+  /run/{runId}:
+    get:
+      operationId: getRun
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Run
+components:
+  schemas:
+    CreateRunRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 10000
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+    RunResponse:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - createdAt
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+    RunStatus:
+      type: string
+      enum:
+        - DRAFT
+        - RUNNING
+        - PAUSED
+        - FINISHED
+        - CANCELLED
+        - FAILED
+    uuid:
+      type: string
+      format: uuid
+servers:
+  - url: /api/core
+    description: Бэкенд за обратным прокси
+    variables: {}

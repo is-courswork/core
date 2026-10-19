@@ -1,0 +1,8 @@
+emit:
+  - "@typespec/openapi3"
+options:
+  "@typespec/openapi3":
+    # Собранный контракт кладётся в ресурсы сервиса: по нему Maven
+    # генерирует интерфейсы контроллеров и модели запросов/ответов.
+    emitter-output-dir: "{project-root}/../src/main/resources/openapi"
+    output-file: "openapi.yaml"
