@@ -23,6 +23,8 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <openapi-generator.version>7.26.0</openapi-generator.version>
+        <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
+        <node.version>v24.22.0</node.version>
         <openapi.spec>${project.basedir}/src/main/resources/openapi/openapi.yaml</openapi.spec>
     </properties>
 
@@ -98,8 +100,49 @@
 
     <build>
         <plugins>
-            <!-- Генерирует интерфейсы контроллеров и модели запросов/ответов из openapi.yaml.
-                 Сам openapi.yaml собирается из typespec/ командой `npm run build`. -->
+            <!-- Собирает openapi.yaml из typespec/. Node.js скачивается в target/node,
+                 ставить его в систему не нужно. Пропустить шаг: -Dskip.npm -Dskip.installnodenpm -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <configuration>
+                    <workingDirectory>typespec</workingDirectory>
+                    <installDirectory>target</installDirectory>
+                    <nodeVersion>${node.version}</nodeVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>npm-ci</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci --no-audit --no-fund</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>typespec-build</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Генерирует интерфейсы контроллеров и модели запросов/ответов из openapi.yaml. -->
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>

@@ -7,7 +7,7 @@
 
 ## Быстрый старт
 
-Нужны JDK 21, Node.js 20+ и запущенный Docker.
+Нужны JDK 21 и запущенный Docker.
 
 ```bash
 ./mvnw spring-boot:run
@@ -25,34 +25,30 @@ curl localhost:8080/api/core/actuator/health
 
 ## Контракт API и кодогенерация
 
-Контракт — источник истины для бэкенда и фронтенда:
+Контракт — источник истины для бэкенда и фронтенда. Всё генерируется одной командой `./mvnw compile` (и любой сборкой Maven):
 
 ```
-typespec/*.tsp  ──npm run build──▶  src/main/resources/openapi/openapi.yaml  ──./mvnw compile──▶  Java-интерфейсы и модели
-                                                       │
-                                                       └──▶ фронтенд генерирует клиент
+typespec/*.tsp  ──▶  src/main/resources/openapi/openapi.yaml  ──▶  Java-интерфейсы и модели
+                                    │
+                                    └──▶ фронтенд генерирует клиент
 ```
 
 1. API описывается в `typespec/` (точка входа — `main.tsp`).
-2. `npm run build` в `typespec/` собирает `src/main/resources/openapi/openapi.yaml`. Этот файл **коммитится**: так Maven, Docker и фронтенд обходятся без Node.js, а CI проверяет, что он совпадает с `typespec/`.
-3. При сборке Maven генерирует из `openapi.yaml` в `target/generated-sources/openapi`:
+2. Maven скачивает Node.js в `target/node` (ставить его в систему не нужно) и собирает из TypeSpec `src/main/resources/openapi/openapi.yaml`. Файл **коммитится**, его использует фронтенд. CI проверяет, что он совпадает с `typespec/`.
+3. Из `openapi.yaml` Maven генерирует в `target/generated-sources/openapi`:
    - интерфейсы контроллеров — `ru.itmo.airlines.core.api.*Api`;
    - модели запросов и ответов — `ru.itmo.airlines.core.api.model.*`.
 
    Этот код не коммитится и руками не правится.
 
-Первый раз установите зависимости TypeSpec:
-
-```bash
-cd typespec && npm install
-```
+Строки `[ERROR] Compiling...` в логе сборки — это индикатор прогресса TypeSpec, а не ошибка.
 
 ### Как добавить метод API
 
 1. Описать модели запроса/ответа и операцию в `typespec/` (новый файл подключить в `main.tsp`).
-2. `cd typespec && npm run build`.
-3. `./mvnw compile` — появится новый метод в интерфейсе `*Api`.
-4. Реализовать его в контроллере, при изменении схемы БД добавить миграцию `src/main/resources/db/migration/V<N>__<описание>.sql`.
+2. `./mvnw compile` — пересоберётся `openapi.yaml` и появится новый метод в интерфейсе `*Api`.
+3. Реализовать его в контроллере, при изменении схемы БД добавить миграцию `src/main/resources/db/migration/V<N>__<описание>.sql`.
+4. Закоммитить вместе с изменённым `openapi.yaml`.
 
 ### Если IDE подсвечивает код красным
 

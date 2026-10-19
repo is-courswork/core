@@ -4,7 +4,8 @@ COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN ./mvnw -q -B dependency:go-offline
 COPY src src
-RUN ./mvnw -q -B -DskipTests package
+# openapi.yaml уже в репозитории, TypeSpec в образе не собираем.
+RUN ./mvnw -q -B -DskipTests -Dskip.installnodenpm -Dskip.npm package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

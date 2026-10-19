@@ -131,5 +131,4 @@ components:
       format: uuid
 servers:
   - url: /api/core
-    description: Бэкенд за обратным прокси
     variables: {}
