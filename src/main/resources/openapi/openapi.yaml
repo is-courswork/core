@@ -4,7 +4,289 @@ info:
   version: 0.1.0
 tags:
   - name: Run
+  - name: Airport
+  - name: Flight
+  - name: Passenger
+  - name: Account
+  - name: Ticket
 paths:
+  /account/{accountId}:
+    get:
+      operationId: getAccount
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Account
+  /airport:
+    get:
+      operationId: listAirports
+      description: Список аэропортов справочника. Поиск — по коду IATA, названию или городу без учёта регистра.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AirportResponse'
+      tags:
+        - Airport
+  /airport/{iataCode}:
+    get:
+      operationId: getAirport
+      parameters:
+        - name: iataCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/iataCode'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirportResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Airport
+  /flight:
+    post:
+      operationId: createFlight
+      description: Создаёт рейс прогона. Места и счёт авиакомпании создаются автоматически.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Flight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFlightRequest'
+  /flight/{flightId}:
+    get:
+      operationId: getFlight
+      parameters:
+        - name: flightId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Flight
+  /flight/{flightId}/close-check-in:
+    post:
+      operationId: closeFlightCheckIn
+      description: 'Закрывает регистрацию: все билеты рейса в статусе PURCHASED переходят в NO_SHOW, деньги не возвращаются.'
+      parameters:
+        - name: flightId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseCheckInResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Flight
+  /flight/{flightId}/seat:
+    get:
+      operationId: listFlightSeats
+      parameters:
+        - name: flightId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+        - name: cabinClass
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CabinClass'
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SeatResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Flight
+  /flight/{flightId}/ticket:
+    get:
+      operationId: listFlightTickets
+      parameters:
+        - name: flightId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+        - name: cabinClass
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CabinClass'
+          explode: false
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TicketStatus'
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Flight
+  /passenger:
+    post:
+      operationId: createPassenger
+      description: Создаёт пассажира прогона. Счёт пассажира создаётся автоматически.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassengerResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Passenger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePassengerRequest'
+  /passenger/{passengerId}:
+    get:
+      operationId: getPassenger
+      parameters:
+        - name: passengerId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassengerResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Passenger
   /run:
     post:
       operationId: createRun
@@ -54,8 +336,245 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Run
+  /ticket:
+    post:
+      operationId: purchaseTicket
+      description: 'Покупка билета: цена переводится со счёта пассажира на счёт авиакомпании.'
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseTicketRequest'
+  /ticket/{ticketId}:
+    get:
+      operationId: getTicket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Ticket
+  /ticket/{ticketId}/check-in:
+    post:
+      operationId: checkInTicket
+      description: |-
+        Регистрация на рейс. Если в классе билета есть свободное место — оно назначается, билет переходит в CHECKED_IN.
+        Если мест нет — билет переходит в DENIED_BOARDING, пассажиру возвращается цена билета и выплачивается компенсация.
+        Оба исхода — успешный ответ, итог смотреть по статусу билета.
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Действие недопустимо в текущем состоянии объекта, например возврат уже возвращённого билета.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+  /ticket/{ticketId}/refund:
+    post:
+      operationId: refundTicket
+      description: 'Возврат билета: цена переводится со счёта авиакомпании на счёт пассажира, билет переходит в REFUNDED.'
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Действие недопустимо в текущем состоянии объекта, например возврат уже возвращённого билета.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Ticket
 components:
   schemas:
+    AccountOwnerType:
+      type: string
+      enum:
+        - AIRLINE
+        - PASSENGER
+    AccountResponse:
+      type: object
+      required:
+        - id
+        - runId
+        - ownerType
+        - balance
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        runId:
+          $ref: '#/components/schemas/uuid'
+        ownerType:
+          $ref: '#/components/schemas/AccountOwnerType'
+        balance:
+          type: number
+          format: decimal
+          description: Текущий баланс в рублях, начальное значение 0.
+    AirportResponse:
+      type: object
+      required:
+        - iataCode
+        - name
+        - city
+        - country
+        - latitude
+        - longitude
+        - timezone
+      properties:
+        iataCode:
+          $ref: '#/components/schemas/iataCode'
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        timezone:
+          type: string
+          description: Часовой пояс в формате IANA, например Europe/Moscow.
+    CabinClass:
+      type: string
+      enum:
+        - ECONOMY
+        - BUSINESS
+    CheckInRequest:
+      type: object
+      required:
+        - compensation
+      properties:
+        compensation:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Компенсация в рублях, которая выплачивается при отказе в посадке.
+    CloseCheckInResponse:
+      type: object
+      required:
+        - noShows
+      properties:
+        noShows:
+          type: integer
+          format: int32
+          description: Сколько билетов переведено из PURCHASED в NO_SHOW.
+    CreateFlightRequest:
+      type: object
+      required:
+        - runId
+        - economySeats
+        - businessSeats
+      properties:
+        runId:
+          $ref: '#/components/schemas/uuid'
+        economySeats:
+          type: integer
+          format: int32
+          minimum: 0
+        businessSeats:
+          type: integer
+          format: int32
+          minimum: 0
+    CreatePassengerRequest:
+      type: object
+      required:
+        - runId
+        - fullName
+      properties:
+        runId:
+          $ref: '#/components/schemas/uuid'
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 255
     CreateRunRequest:
       type: object
       required:
@@ -92,6 +611,69 @@ components:
           type: string
         message:
           type: string
+    FlightResponse:
+      type: object
+      required:
+        - id
+        - runId
+        - economySeats
+        - businessSeats
+        - airlineAccountId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        runId:
+          $ref: '#/components/schemas/uuid'
+        economySeats:
+          type: integer
+          format: int32
+        businessSeats:
+          type: integer
+          format: int32
+        airlineAccountId:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+          description: Счёт авиакомпании, созданный вместе с рейсом.
+    PassengerResponse:
+      type: object
+      required:
+        - id
+        - runId
+        - fullName
+        - accountId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        runId:
+          $ref: '#/components/schemas/uuid'
+        fullName:
+          type: string
+        accountId:
+          $ref: '#/components/schemas/uuid'
+    PurchaseTicketRequest:
+      type: object
+      required:
+        - flightId
+        - passengerId
+        - cabinClass
+        - price
+        - purchasedAt
+      properties:
+        flightId:
+          $ref: '#/components/schemas/uuid'
+        passengerId:
+          $ref: '#/components/schemas/uuid'
+        cabinClass:
+          $ref: '#/components/schemas/CabinClass'
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Цена билета в рублях, её рассчитывает движок.
+        purchasedAt:
+          type: string
+          format: date-time
+          description: Время покупки в виртуальном времени прогона.
     RunResponse:
       type: object
       required:
@@ -126,6 +708,68 @@ components:
         - FINISHED
         - CANCELLED
         - FAILED
+    SeatResponse:
+      type: object
+      required:
+        - id
+        - flightId
+        - seatNumber
+        - cabinClass
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        flightId:
+          $ref: '#/components/schemas/uuid'
+        seatNumber:
+          type: string
+          description: Номер места, уникален в пределах рейса, например 14C.
+        cabinClass:
+          $ref: '#/components/schemas/CabinClass'
+    TicketResponse:
+      type: object
+      required:
+        - id
+        - flightId
+        - passengerId
+        - cabinClass
+        - price
+        - status
+        - purchasedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        flightId:
+          $ref: '#/components/schemas/uuid'
+        passengerId:
+          $ref: '#/components/schemas/uuid'
+        cabinClass:
+          $ref: '#/components/schemas/CabinClass'
+        price:
+          type: number
+          format: decimal
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        seatId:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+          description: Назначается при регистрации.
+        seatNumber:
+          type: string
+        purchasedAt:
+          type: string
+          format: date-time
+    TicketStatus:
+      type: string
+      enum:
+        - PURCHASED
+        - REFUNDED
+        - CHECKED_IN
+        - NO_SHOW
+        - DENIED_BOARDING
+    iataCode:
+      type: string
+      pattern: ^[A-Z]{3}$
+      description: Трёхбуквенный код аэропорта IATA, например SVO.
     uuid:
       type: string
       format: uuid
