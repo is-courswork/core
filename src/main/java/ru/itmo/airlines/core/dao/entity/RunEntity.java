@@ -28,9 +28,10 @@ public class RunEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(columnDefinition = "text")
     private String description;
 
     @Enumerated(EnumType.STRING)

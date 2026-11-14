@@ -30,6 +30,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateRunRequest'
+  /run/all:
+    get:
+      operationId: getAllRuns
+      description: All runs, newest first. No pagination.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunResponse'
+      tags:
+        - Run
   /run/{runId}:
     get:
       operationId: getRun
@@ -54,6 +70,60 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Run
+    patch:
+      operationId: updateRun
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRunRequest'
+    delete:
+      operationId: deleteRun
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Run
 components:
   schemas:
     CreateRunRequest:
@@ -64,10 +134,11 @@ components:
         name:
           type: string
           minLength: 1
-          maxLength: 255
+          maxLength: 120
+          pattern: '[\s\S]*\S[\s\S]*'
         description:
           type: string
-          maxLength: 10000
+          maxLength: 2000
     ErrorResponse:
       type: object
       required:
@@ -126,6 +197,19 @@ components:
         - FINISHED
         - CANCELLED
         - FAILED
+    UpdateRunRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: '[\s\S]*\S[\s\S]*'
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+      description: Only supplied fields are updated. A null description clears it; name cannot be null.
     uuid:
       type: string
       format: uuid
