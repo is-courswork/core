@@ -12,7 +12,6 @@ airlines.arhr.tech {
         -Server
     }
 
-    redir / /info 302
     redir /swagger /swagger/ 308
     redir /postgres /postgres/ 308
 
@@ -45,6 +44,6 @@ airlines.arhr.tech {
         file_server
     }
     handle {
-        respond "Not found" 404
+        reverse_proxy frontend:8080
     }
 }
