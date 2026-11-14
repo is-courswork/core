@@ -22,3 +22,8 @@ Thumbs.db
 # Local env
 .env
 *.log
+deploy/image/app.jar
+
+# Local server setup and operational notes; not used by CI.
+/deploy/README.md
+/deploy/host/

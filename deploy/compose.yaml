@@ -1,0 +1,113 @@
+name: airlines
+
+x-service: &service
+  restart: unless-stopped
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: '3'
+
+services:
+  postgres:
+    <<: *service
+    image: postgres:17.12
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      CORE_DB_PASSWORD: ${CORE_DB_PASSWORD:?required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - /opt/airlines/shared/init-core.sh:/docker-entrypoint-initdb.d/init-core.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+    networks: [database]
+
+  core:
+    <<: *service
+    image: ${CORE_IMAGE:?required}
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/airlines_core
+      DB_USER: airlines_core
+      DB_PASSWORD: ${CORE_DB_PASSWORD:?required}
+      SPRING_DOCKER_COMPOSE_ENABLED: 'false'
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      JAVA_TOOL_OPTIONS: '-XX:MaxRAMPercentage=65 -XX:+ExitOnOutOfMemoryError'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 768m
+    networks: [web, database]
+
+  cloudbeaver:
+    <<: *service
+    image: dbeaver/cloudbeaver:26.2.4
+    environment:
+      CB_SERVER_NAME: Airlines
+      CB_SERVER_URL: https://airlines.arhr.tech/postgres/
+      CB_ADMIN_NAME: ${CLOUDBEAVER_ADMIN_NAME:?required}
+      CB_ADMIN_PASSWORD: ${CLOUDBEAVER_ADMIN_PASSWORD:?required}
+      CLOUDBEAVER_ROOT_URI: /postgres/
+      CLOUDBEAVER_APP_ANONYMOUS_ACCESS_ENABLED: 'false'
+      CLOUDBEAVER_APP_SUPPORTS_CUSTOM_CONNECTIONS: 'false'
+      CLOUDBEAVER_APP_FORWARD_PROXY: 'true'
+      CLOUDBEAVER_DB_BACKUP_ENABLED: 'false'
+      JAVA_OPTS: '-Xms128m -Xmx512m -XX:+ExitOnOutOfMemoryError'
+    volumes:
+      - cloudbeaver-data:/opt/cloudbeaver/workspace
+      - /opt/airlines/shared/cloudbeaver-data-sources.json:/opt/cloudbeaver/conf/initial-data-sources.conf:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - "exec 3<>/dev/tcp/127.0.0.1/8978; printf 'GET /postgres/ HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3; grep -m 1 -q '^HTTP/1.[01] 200 ' <&3"
+      start_period: 90s
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    mem_limit: 768m
+    networks: [web, database]
+
+  swagger:
+    <<: *service
+    image: swaggerapi/swagger-ui:v5.35.0
+    environment:
+      BASE_URL: /swagger
+      SWAGGER_JSON_URL: /openapi/core.yaml
+      VALIDATOR_URL: none
+    mem_limit: 96m
+    networks: [web]
+
+  caddy:
+    <<: *service
+    image: caddy:2.11.9-alpine
+    ports:
+      - '127.0.0.1:18080:80'
+      - '127.0.0.1:18443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./static:/srv:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 128m
+    networks: [web]
+
+networks:
+  web:
+  database:
+    internal: true
+
+volumes:
+  postgres-data:
+  cloudbeaver-data:
+  caddy-data:
+  caddy-config:

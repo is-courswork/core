@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Airlines — пространство проекта</title>
+  <style>
+    :root { font-family: ui-sans-serif, system-ui, sans-serif; color: #edf3fc; background: #0a101d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 15% 0, #142c42 0, transparent 55%); }
+    main { max-width: 780px; margin: auto; padding: 64px 24px 40px; }
+    .eyebrow { display: flex; align-items: center; gap: 10px; color: #89dbed; font-size: 12px; font-weight: 650; letter-spacing: .18em; text-transform: uppercase; }
+    .eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #89dbed; box-shadow: 0 0 18px #89dbed66; }
+    h1 { font-size: clamp(36px, 7vw, 52px); font-weight: 650; line-height: 1.12; margin: 20px 0 14px; letter-spacing: -.045em; }
+    .intro { color: #9aabc1; font-size: 16px; line-height: 1.7; margin: 0; }
+    .grid { display: flex; flex-direction: column; gap: 12px; margin: 36px 0 28px; counter-reset: link; }
+    .card { display: grid; grid-template-columns: 42px minmax(0, 1fr) 24px; align-items: center; gap: 16px; color: inherit; text-decoration: none; padding: 23px 24px; border: 1px solid #27364a; border-radius: 16px; background: linear-gradient(110deg, #142235ee, #101a2bee); transition: border-color .15s, background .15s, transform .15s; counter-increment: link; }
+    .card::before { content: counter(link, decimal-leading-zero); display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #32475e; border-radius: 12px; color: #89dbed; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .card::after { content: '↗'; color: #89dbed; font-size: 24px; text-align: right; }
+    .card:hover { border-color: #6ab8cf; background: #172b40; transform: translateX(4px); }
+    .card:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 3px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 0 0 5px; letter-spacing: -.015em; }
+    .card p { color: #a0b0c5; font-size: 14px; line-height: 1.5; margin: 0; }
+    code { display: block; color: #6f88a6; font-size: 11px; line-height: 1.5; margin-top: 7px; overflow-wrap: anywhere; }
+    footer { color: #7588a3; font-size: 12px; line-height: 1.6; }
+    @media (max-width: 520px) {
+      main { padding: 40px 18px 28px; }
+      .card { padding: 20px 16px; gap: 12px; grid-template-columns: 34px minmax(0, 1fr) 20px; }
+      .card::before { width: 32px; height: 36px; border-radius: 10px; }
+      .card p { font-size: 13px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Airlines</div>
+  <h1>Пространство проекта</h1>
+  <p class="intro">Приложение, документация и инструменты команды.</p>
+  <nav class="grid" aria-label="Ссылки проекта">
+    <a class="card" href="/" target="_blank" rel="noopener noreferrer"><div><h2>Фронтенд</h2><p>Главная страница приложения. Интерфейс скоро появится.</p><code>airlines.arhr.tech</code></div></a>
+    <a class="card" href="/swagger/" target="_blank" rel="noopener noreferrer"><div><h2>Swagger UI</h2><p>Документация API и выполнение запросов.</p><code>/swagger/</code></div></a>
+    <a class="card" href="/postgres/" target="_blank" rel="noopener noreferrer"><div><h2>CloudBeaver</h2><p>Таблицы, данные и SQL-запросы. Требуется вход.</p><code>/postgres/</code></div></a>
+    <a class="card" href="https://github.com/is-courswork/core" target="_blank" rel="noopener noreferrer"><div><h2>Репозиторий</h2><p>Исходный код и история изменений проекта.</p><code>github.com/is-courswork/core</code></div></a>
+    <a class="card" href="https://github.com/is-courswork/core/actions" target="_blank" rel="noopener noreferrer"><div><h2>CI / CD</h2><p>Проверки, сборка образов и ручной деплой.</p><code>GitHub Actions</code></div></a>
+  </nav>
+  <footer>Все ссылки открываются в новой вкладке.</footer>
+</main>
+</body>
+</html>

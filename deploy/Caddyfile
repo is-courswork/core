@@ -1,0 +1,50 @@
+{
+    servers {
+        protocols h1 h2
+    }
+}
+
+airlines.arhr.tech {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    redir / /info 302
+    redir /swagger /swagger/ 308
+    redir /postgres /postgres/ 308
+
+    handle /api/core/* {
+        reverse_proxy core:8080
+    }
+    handle /api/* {
+        respond "Unknown API service" 404
+    }
+    handle /swagger/* {
+        reverse_proxy swagger:8080
+    }
+    handle /postgres/* {
+        reverse_proxy cloudbeaver:8978
+    }
+    handle /info {
+        root * /srv
+        rewrite * /info.html
+        header Cache-Control no-store
+        file_server
+    }
+    handle /version.json {
+        root * /srv
+        header Cache-Control no-store
+        file_server
+    }
+    handle /openapi/* {
+        root * /srv
+        header Cache-Control no-cache
+        file_server
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

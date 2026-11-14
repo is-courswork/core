@@ -95,4 +95,48 @@ docker run -p 8080:8080 -e DB_URL=jdbc:postgresql://host.docker.internal:5432/ai
 
 ## CI
 
-`.gitlab-ci.yml`: проверка, что `openapi.yaml` собран из актуального `typespec/`, затем сборка jar с юнит-тестами.
+GitHub Actions: [запуски CI](https://github.com/is-courswork/core/actions/workflows/ci.yml).
+Конфигурация — [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+Пайплайн запускается при push в любую ветку, при открытии и обновлении pull request,
+а также вручную через **Actions → CI → Run workflow**.
+
+1. `contract`: Node.js 24, `npm ci` и сборка TypeSpec; проверка, что результат совпадает
+   с закоммиченным `src/main/resources/openapi/openapi.yaml`.
+2. `build`: после успешного `contract` — Temurin JDK 21 и `./mvnw -B verify`
+   (сборка JAR, юнит-тесты и компонентные тесты с PostgreSQL в Testcontainers).
+   Зависимости npm и Maven кэшируются.
+3. `image`: для `main` — сборка образа из проверенного JAR и публикация
+   `ghcr.io/is-courswork/core:sha-<commit>`. Повторной Maven-сборки нет.
+4. `deploy`: в том же запуске ожидает ручного подтверждения environment `production`.
+   **Review deployments → production → Approve and deploy** запускает установку
+   уже собранного образа по digest. Без подтверждения сервер не обновляется.
+
+JAR доступен в артефакте `core-jar`, отчёты юнит-тестов — в `unit-test-reports`
+(в том числе при падении тестов). Артефакты хранятся 7 дней.
+Отчёты компонентных тестов — в `component-test-reports`. Локально полный набор
+запускается командой `./mvnw verify` с Docker.
+
+### Переключение существующего клона с GitLab
+
+Сохраните прежний remote под именем `gitlab`, а GitHub сделайте основным:
+
+```bash
+git remote rename origin gitlab
+git remote add origin https://github.com/is-courswork/core.git
+git fetch origin
+```
+
+После проверки истории ветки первый push в GitHub: `git push -u origin main`.
+Если `main` уже содержит другую историю, сначала согласуйте её локально.
+
+## Ссылки проекта
+
+| Адрес | Назначение |
+|---|---|
+| https://airlines.arhr.tech/info | Основные ссылки проекта |
+| https://airlines.arhr.tech/ | Пока перенаправляет на `/info`, затем фронтенд |
+| https://airlines.arhr.tech/swagger/ | Swagger UI текущего контракта core |
+| https://airlines.arhr.tech/openapi/core.yaml | OpenAPI текущего релиза |
+| https://airlines.arhr.tech/api/core/actuator/health | Состояние core и БД |
+| https://airlines.arhr.tech/postgres/ | CloudBeaver, требуется вход |
