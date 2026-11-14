@@ -108,9 +108,9 @@ GitHub Actions: [запуски CI](https://github.com/is-courswork/core/actions
    Зависимости npm и Maven кэшируются.
 3. `image`: для `main` — сборка образа из проверенного JAR и публикация
    `ghcr.io/is-courswork/core:sha-<commit>`. Повторной Maven-сборки нет.
-4. `deploy`: в том же запуске ожидает ручного подтверждения environment `production`.
-   **Review deployments → production → Approve and deploy** запускает установку
-   уже собранного образа по digest. Без подтверждения сервер не обновляется.
+4. `deploy`: для `main` автоматически устанавливает уже проверенный образ по digest
+   из того же запуска в окружение `production`, без ручного подтверждения.
+   Запуски для `main` выполняются последовательно, активный деплой не прерывается.
 
 JAR доступен в артефакте `core-jar`, отчёты юнит-тестов — в `unit-test-reports`
 (в том числе при падении тестов). Артефакты хранятся 7 дней.

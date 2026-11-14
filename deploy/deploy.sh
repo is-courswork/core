@@ -15,7 +15,7 @@ exec 9>"$base/deploy.lock"
 flock -w 600 9
 release="$base/releases/$commit"
 previous=$(readlink -f "$base/current" || true)
-# The archive is uploaded by the same approved workflow run as the image.
+# The archive is uploaded by the same successful workflow run as the image.
 mkdir -p "$release"
 tar -xzf "$base/incoming/$commit.tar.gz" -C "$release" --no-same-owner
 chmod -R a+rX "$release"
