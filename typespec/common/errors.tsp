@@ -27,3 +27,10 @@ model NotFoundError {
   @statusCode _: 404;
   @body body: ErrorResponse;
 }
+
+/** Действие недопустимо в текущем состоянии объекта, например возврат уже возвращённого билета. */
+@error
+model ConflictError {
+  @statusCode _: 409;
+  @body body: ErrorResponse;
+}
