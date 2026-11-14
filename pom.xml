@@ -162,6 +162,9 @@
                             <generateModelTests>false</generateModelTests>
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateModelDocumentation>false</generateModelDocumentation>
+                            <schemaMappings>
+                                <schemaMapping>UpdateRunRequest=ru.itmo.airlines.core.controller.request.UpdateRunRequest</schemaMapping>
+                            </schemaMappings>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>

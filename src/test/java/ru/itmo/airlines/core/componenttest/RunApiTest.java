@@ -2,10 +2,11 @@ package ru.itmo.airlines.core.componenttest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
@@ -14,12 +15,14 @@ import org.springframework.http.MediaType;
 class RunApiTest extends BaseComponentTest {
 
     @Test
-    void createdRunCanBeFetched() throws Exception {
+    void runCanBeCreatedListedUpdatedAndDeleted() throws Exception {
+        String name = "n".repeat(120);
+        String description = "d".repeat(2000);
         String body = mockMvc.perform(post("/run")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Повышение цены бизнеса", "description": "Гипотеза"}
-                                """))
+                                {"name": "%s", "description": "%s"}
+                                """.formatted(name, description)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andReturn().getResponse().getContentAsString();
@@ -28,26 +31,28 @@ class RunApiTest extends BaseComponentTest {
 
         mockMvc.perform(get("/run/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Повышение цены бизнеса"))
-                .andExpect(jsonPath("$.description").value("Гипотеза"));
-    }
+                .andExpect(jsonPath("$.name").value(name))
+                .andExpect(jsonPath("$.description").value(description));
 
-    @Test
-    void emptyNameIsRejected() throws Exception {
-        mockMvc.perform(post("/run")
+        mockMvc.perform(get("/run/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", hasItem(id)));
+
+        mockMvc.perform(patch("/run/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name": ""}
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.fieldErrors[0].field").value("name"));
-    }
+                        .content("{\"name\":\"Updated\",\"description\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated"))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.description").doesNotExist());
 
-    @Test
-    void unknownRunReturns404() throws Exception {
-        mockMvc.perform(get("/run/{id}", UUID.randomUUID()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+        mockMvc.perform(get("/run/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated"))
+                .andExpect(jsonPath("$.description").doesNotExist());
+
+        mockMvc.perform(delete("/run/{id}", id)).andExpect(status().isNoContent());
+        mockMvc.perform(get("/run/{id}", id)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/run/{id}", id)).andExpect(status().isNotFound());
     }
 }

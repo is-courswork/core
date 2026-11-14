@@ -19,12 +19,24 @@ enum RunStatus {
 }
 
 model CreateRunRequest {
+  @pattern("[\\s\\S]*\\S[\\s\\S]*")
   @minLength(1)
-  @maxLength(255)
+  @maxLength(120)
   name: string;
 
-  @maxLength(10000)
+  @maxLength(2000)
   description?: string;
+}
+
+@doc("Only supplied fields are updated. A null description clears it; name cannot be null.")
+model UpdateRunRequest {
+  @minLength(1)
+  @maxLength(120)
+  @pattern("[\\s\\S]*\\S[\\s\\S]*")
+  name?: string;
+
+  @maxLength(2000)
+  description?: string | null;
 }
 
 model RunResponse {
@@ -40,6 +52,12 @@ model RunResponse {
 @route("/run")
 @tag("Run")
 interface Run {
+  @get
+  @route("/all")
+  @operationId("getAllRuns")
+  @doc("All runs, newest first. No pagination.")
+  all(): RunResponse[];
+
   @post
   @operationId("createRun")
   create(@body request: CreateRunRequest): {
@@ -50,4 +68,12 @@ interface Run {
   @get
   @operationId("getRun")
   get(@path runId: uuid): RunResponse | NotFoundError;
+
+  @patch
+  @operationId("updateRun")
+  update(@path runId: uuid, @body request: UpdateRunRequest): RunResponse | BadRequestError | NotFoundError;
+
+  @delete
+  @operationId("deleteRun")
+  delete(@path runId: uuid): { @statusCode _: 204; } | NotFoundError;
 }
