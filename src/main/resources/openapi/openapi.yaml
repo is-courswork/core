@@ -1,9 +1,7 @@
 openapi: 3.0.0
-
 info:
   title: Airlines Core API
   version: 0.1.0
-
 tags:
   - name: Run
   - name: Airport
@@ -11,7 +9,6 @@ tags:
   - name: Passenger
   - name: Account
   - name: Ticket
-
 paths:
   /account/{accountId}:
     get:
@@ -37,7 +34,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Account
-
   /airport:
     get:
       operationId: listAirports
@@ -60,7 +56,6 @@ paths:
                   $ref: '#/components/schemas/AirportResponse'
       tags:
         - Airport
-
   /airport/{iataCode}:
     get:
       operationId: getAirport
@@ -85,7 +80,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Airport
-
   /flight:
     post:
       operationId: createFlight
@@ -118,7 +112,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateFlightRequest'
-
   /flight/{flightId}:
     get:
       operationId: getFlight
@@ -143,7 +136,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Flight
-
   /flight/{flightId}/close-check-in:
     post:
       operationId: closeFlightCheckIn
@@ -169,7 +161,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Flight
-
   /flight/{flightId}/seat:
     get:
       operationId: listFlightSeats
@@ -202,7 +193,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Flight
-
   /flight/{flightId}/ticket:
     get:
       operationId: listFlightTickets
@@ -241,7 +231,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Flight
-
   /passenger:
     post:
       operationId: createPassenger
@@ -274,7 +263,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreatePassengerRequest'
-
   /passenger/{passengerId}:
     get:
       operationId: getPassenger
@@ -299,7 +287,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Passenger
-
   /run:
     post:
       operationId: createRun
@@ -325,7 +312,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateRunRequest'
-
   /run/all:
     get:
       operationId: getAllRuns
@@ -342,7 +328,6 @@ paths:
                   $ref: '#/components/schemas/RunResponse'
       tags:
         - Run
-
   /run/{runId}:
     get:
       operationId: getRun
@@ -367,7 +352,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Run
-
     patch:
       operationId: updateRun
       parameters:
@@ -403,7 +387,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateRunRequest'
-
     delete:
       operationId: deleteRun
       parameters:
@@ -423,7 +406,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Run
-
   /ticket:
     post:
       operationId: purchaseTicket
@@ -456,7 +438,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PurchaseTicketRequest'
-
   /ticket/{ticketId}:
     get:
       operationId: getTicket
@@ -481,7 +462,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Ticket
-
   /ticket/{ticketId}/check-in:
     post:
       operationId: checkInTicket
@@ -528,7 +508,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CheckInRequest'
-
   /ticket/{ticketId}/refund:
     post:
       operationId: refundTicket
@@ -560,7 +539,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Ticket
-
 components:
   schemas:
     AccountOwnerType:
@@ -568,7 +546,6 @@ components:
       enum:
         - AIRLINE
         - PASSENGER
-
     AccountResponse:
       type: object
       required:
@@ -587,7 +564,6 @@ components:
           type: number
           format: decimal
           description: Текущий баланс в рублях, начальное значение 0.
-
     AirportResponse:
       type: object
       required:
@@ -616,13 +592,11 @@ components:
         timezone:
           type: string
           description: Часовой пояс в формате IANA, например Europe/Moscow.
-
     CabinClass:
       type: string
       enum:
         - ECONOMY
         - BUSINESS
-
     CheckInRequest:
       type: object
       required:
@@ -633,7 +607,6 @@ components:
           format: decimal
           minimum: 0
           description: Компенсация в рублях, которая выплачивается при отказе в посадке.
-
     CloseCheckInResponse:
       type: object
       required:
@@ -643,7 +616,6 @@ components:
           type: integer
           format: int32
           description: Сколько билетов переведено из PURCHASED в NO_SHOW.
-
     CreateFlightRequest:
       type: object
       required:
@@ -661,7 +633,6 @@ components:
           type: integer
           format: int32
           minimum: 0
-
     CreatePassengerRequest:
       type: object
       required:
@@ -674,7 +645,6 @@ components:
           type: string
           minLength: 1
           maxLength: 255
-
     CreateRunRequest:
       type: object
       required:
@@ -688,7 +658,6 @@ components:
         description:
           type: string
           maxLength: 2000
-
     ErrorResponse:
       type: object
       required:
@@ -703,7 +672,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FieldError'
-
     FieldError:
       type: object
       required:
@@ -714,7 +682,6 @@ components:
           type: string
         message:
           type: string
-
     FlightResponse:
       type: object
       required:
@@ -738,7 +705,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/uuid'
           description: Счёт авиакомпании, созданный вместе с рейсом.
-
     PassengerResponse:
       type: object
       required:
@@ -755,7 +721,6 @@ components:
           type: string
         accountId:
           $ref: '#/components/schemas/uuid'
-
     PurchaseTicketRequest:
       type: object
       required:
@@ -780,7 +745,6 @@ components:
           type: string
           format: date-time
           description: Время покупки в виртуальном времени прогона.
-
     RunResponse:
       type: object
       required:
@@ -806,7 +770,6 @@ components:
         finishedAt:
           type: string
           format: date-time
-
     RunStatus:
       type: string
       enum:
@@ -816,7 +779,6 @@ components:
         - FINISHED
         - CANCELLED
         - FAILED
-
     SeatResponse:
       type: object
       required:
@@ -834,7 +796,6 @@ components:
           description: Номер места, уникален в пределах рейса, например 14C.
         cabinClass:
           $ref: '#/components/schemas/CabinClass'
-
     TicketResponse:
       type: object
       required:
@@ -868,7 +829,6 @@ components:
         purchasedAt:
           type: string
           format: date-time
-
     TicketStatus:
       type: string
       enum:
@@ -877,16 +837,6 @@ components:
         - CHECKED_IN
         - NO_SHOW
         - DENIED_BOARDING
-
-    iataCode:
-      type: string
-      pattern: '^[A-Z]{3}$'
-      description: Трёхбуквенный код аэропорта IATA, например SVO.
-
-    uuid:
-      type: string
-      format: uuid
-
     UpdateRunRequest:
       type: object
       properties:
@@ -900,7 +850,13 @@ components:
           nullable: true
           maxLength: 2000
       description: Only supplied fields are updated. A null description clears it; name cannot be null.
-
+    iataCode:
+      type: string
+      pattern: ^[A-Z]{3}$
+      description: Трёхбуквенный код аэропорта IATA, например SVO.
+    uuid:
+      type: string
+      format: uuid
 servers:
   - url: /api/core
     variables: {}
