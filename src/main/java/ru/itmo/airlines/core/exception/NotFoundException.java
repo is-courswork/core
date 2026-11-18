@@ -7,6 +7,6 @@ public class NotFoundException extends RuntimeException {
     }
 
     public static NotFoundException of(String entity, Object id) {
-        return new NotFoundException(entity + " " + id + " не найден");
+        return new NotFoundException(entity + " " + id + " not found");
     }
 }
