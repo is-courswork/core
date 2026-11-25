@@ -15,10 +15,17 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import ru.itmo.airlines.core.api.model.ErrorResponse;
 import ru.itmo.airlines.core.api.model.FieldError;
 import ru.itmo.airlines.core.exception.NotFoundException;
+import ru.itmo.airlines.core.exception.BadRequestException;
 
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequest(BadRequestException e) {
+        return new ErrorResponse("BAD_REQUEST", e.getMessage());
+    }
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
