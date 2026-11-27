@@ -10,12 +10,6 @@ workflow_url=${3:?workflow URL required}
 [[ "$commit" =~ ^[a-f0-9]{40}$ ]] || exit 2
 [[ "$workflow_url" =~ ^https://github\.com/is-courswork/core/actions/runs/[0-9]+$ ]] || exit 2
 
-# The OCI archive preserves the digest, but may omit the repository name.
-image_id=${image##*@}
-[[ "$(docker image inspect --format '{{.Id}}' "$image_id")" == "$image_id" ]]
-revision=$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$image_id")
-[[ "$revision" == "$commit" ]]
-
 base=/opt/airlines
 exec 9>"$base/deploy.lock"
 flock -w 600 9
@@ -25,7 +19,7 @@ previous=$(readlink -f "$base/current" || true)
 mkdir -p "$release"
 tar -xzf "$base/incoming/$commit.tar.gz" -C "$release" --no-same-owner
 chmod -R a+rX "$release"
-printf 'CORE_IMAGE=%s\n' "$image_id" > "$release/.release.env"
+printf 'CORE_IMAGE=%s\n' "$image" > "$release/.release.env"
 python3 - "$release/static/version.json" "$commit" "$workflow_url" <<'PY'
 import datetime, json, sys
 with open(sys.argv[1], 'w') as f:
@@ -53,16 +47,11 @@ rollback() {
     echo 'Database migrations are not automatically reverted.'
     exit "$status"
 }
-compose "$release" config --quiet
-# Reuse the installed infrastructure images. Pull only a newly introduced image.
-while IFS= read -r service_image; do
-    if ! docker image inspect "$service_image" > /dev/null 2>&1; then
-        docker image pull "$service_image"
-    fi
-done < <(compose "$release" config --images)
-
 trap rollback ERR
-compose "$release" up -d --remove-orphans --pull never --wait --wait-timeout 240
+
+compose "$release" config --quiet
+compose "$release" pull
+compose "$release" up -d --remove-orphans --wait --wait-timeout 240
 healthy=false
 for attempt in $(seq 1 60); do
     if compose "$release" exec -T caddy wget -q -O - \
